@@ -1,0 +1,86 @@
+/*
+ * Стили компонента App
+ */
+.App {
+  
+}
+
+/*
+ * Стили компонента Searchbar
+ */
+.Searchbar {
+  
+}
+
+/*
+ * Стили компонента SearchForm
+ */
+.SearchForm {
+  
+}
+
+.SearchForm-button {
+  
+}
+
+.SearchForm-button
+
+.SearchForm-button-label {
+
+}
+
+.SearchForm-input {
+  
+}
+
+.SearchForm-input
+
+/*
+ * Стили компонента ImageGallery
+ */
+.ImageGallery {
+  d
+}
+
+/*
+ * Стили компонента ImageGalleryItem
+ */
+.ImageGalleryItem {
+  
+}
+
+.ImageGalleryItem-image {
+  
+}
+
+.ImageGalleryItem-image
+
+/*
+ * Стили компонента Modal
+ */
+
+.Overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 1200;
+}
+
+.Modal {
+  
+}
+
+/*
+* Стили компонента Buton (Load more)
+*/
+.Button {
+ 
+}
+
+.Button
