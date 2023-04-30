@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Component } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { imagesApi } from 'services/images-api';
 import ImageGalleryItem from 'components/ImageGalleryItem';
 import { List } from './ImageGallery.styled';
@@ -9,94 +9,81 @@ import Button from 'components/Button';
 import InfinityLoader from 'components/Loader';
 import Modal from 'components/Modal';
 
-class ImageGallery extends Component {
-  state = {
-    imagesArr: [],
-    page: 1,
-    isLoading: false,
-    perPage: 12,
-    isVisible: false,
-    showModal: false,
-    largeImageURL: '',
-    tags: '',
+export default function ImageGallery({ query, page, setNextPage }) {
+  const [imagesArr, setImagesArr] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [largeImageURL, setLargeImageURL] = useState('');
+  const [tags, setTags] = useState('');
+  const [perPage] = useState(12);
+  const getImages = useCallback(
+    async (searchQuery, currentPage) => {
+      try {
+        setIsLoading(true);
+        const { totalHits, hits } = await imagesApi.fetchImages(
+          searchQuery,
+          currentPage
+        );
+        setImagesArr(prevImagesArr => [
+          ...prevImagesArr,
+          ...imagesApi.normalizeData(hits),
+        ]);
+        setIsVisible(Math.ceil(totalHits / perPage) !== page);
+      } catch (error) {
+        setIsVisible(false);
+        toast.error(`${error}`);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [page, perPage]
+  );
+
+  useEffect(() => {
+    if (query === '') return;
+
+    if (page > 1) {
+      getImages(query, page);
+      return;
+    }
+
+    setImagesArr([]);
+    getImages(query);
+  }, [getImages, page, query]);
+
+  const onLoadMoreClick = () => {
+    setNextPage();
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    const { query } = this.props;
-    const { page } = this.state;
-    if (prevProps.query !== query) {
-      this.setState({ imagesArr: [], page: 1 });
-      this.getImages(query);
-    }
-    if (prevState.page !== page && page > 1) {
-      this.getImages(query, page);
-    }
-  }
-
-  async getImages(query, page) {
-    if (!query) return;
-    this.setState({ isLoading: true });
-    try {
-      const { totalHits, hits } = await imagesApi.fetchImages(
-        query,
-        page,
-        this.perPage
-      );
-      this.setState(prevState => ({
-        imagesArr: [...prevState.imagesArr, ...imagesApi.normalizeData(hits)],
-        isVisible:
-          Math.ceil(totalHits / this.state.perPage) !== this.state.page,
-      }));
-    } catch (error) {
-      this.setState({ isVisible: false });
-      toast.error(`${error}`);
-    } finally {
-      this.setState({ isLoading: false });
-    }
-  }
-
-  onLoadMoreClick = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const toggleModal = (largeImageURL, tags) => {
+    setLargeImageURL(largeImageURL);
+    setTags(tags);
+    setShowModal(prevShowModal => !prevShowModal);
   };
 
-  toggleModal = (largeImageURL, tags) =>
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-      largeImageURL,
-      tags,
-    }));
-
-  render() {
-    const { imagesArr, isLoading, isVisible, showModal, largeImageURL, tags } =
-      this.state;
-    return (
-      <>
-        <List>
-          {imagesArr.length !== 0 && (
-            <ImageGalleryItem images={imagesArr} showModal={this.toggleModal} />
-          )}
-        </List>
-        {isLoading && <InfinityLoader />}
-        {isVisible && (
-          <Button clickHandler={this.onLoadMoreClick} isLoading={isLoading}>
-            {isLoading ? 'Loading...' : 'Load More'}
-          </Button>
+  return (
+    <>
+      <List>
+        {imagesArr.length !== 0 && (
+          <ImageGalleryItem images={imagesArr} showModal={toggleModal} />
         )}
-        {showModal && (
-          <Modal src={largeImageURL} alt={tags} closeModal={this.toggleModal} />
-        )}
-      </>
-    );
-  }
+      </List>
+      {isLoading && <InfinityLoader />}
+      {isVisible && (
+        <Button clickHandler={onLoadMoreClick} isLoading={isLoading}>
+          {isLoading ? 'Loading...' : 'Load More'}
+        </Button>
+      )}
+      {showModal && (
+        <Modal src={largeImageURL} alt={tags} closeModal={toggleModal} />
+      )}
+    </>
+  );
 }
 
 ImageGallery.propTypes = {
-  imagesArr: PropTypes.array,
-  isLoading: PropTypes.bool,
-  isVisible: PropTypes.bool,
-  showModal: PropTypes.bool,
-  largeImageURL: PropTypes.string,
-  tags: PropTypes.string,
+  query: PropTypes.string.isRequired,
+  page: PropTypes.number.isRequired,
+  setNextPage: PropTypes.func.isRequired,
 };
-
-export default ImageGallery;

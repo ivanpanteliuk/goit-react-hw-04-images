@@ -8,7 +8,7 @@ function ImageGalleryItem({ images, showModal }) {
       key={id}
       className="gallery-item"
     >
-      <Image src={previewURL} alt={tags} />
+      <Image src={previewURL} alt={tags} loading="lazy" />
     </ListItem>
   ));
 }
